@@ -1,4 +1,4 @@
-lazy val finagleVersion = "19.4.0"
+lazy val finagleVersion = "18.12.0"
 lazy val finchVersion = "0.28.0"
 lazy val genericVersion = "0.11.0"
 lazy val configVersion = "1.3.4"
