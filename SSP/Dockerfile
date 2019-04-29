@@ -10,9 +10,9 @@ ENV CLASSPATH .:$JAVA_HOME/jre/lib:$JAVA_HOME/lib:$JAVA_HOME/lib/tools.jar
 # Scala
 WORKDIR /usr/local/lib
 RUN yum -y install wget
-RUN wget http://downloads.typesafe.com/scala/2.12.6/scala-2.12.6.tgz
-RUN tar zxvf scala-2.12.6.tgz
-RUN ln -s scala-2.12.6 scala
+RUN wget http://downloads.typesafe.com/scala/2.12.8/scala-2.12.8.tgz
+RUN tar zxvf scala-2.12.8.tgz
+RUN ln -s scala-2.12.8 scala
 
 ENV SCALA_HOME=/usr/local/lib/scala
 ENV PATH $PATH:$SCALA_HOME/bin
