@@ -1,2 +1,8 @@
+### Scala
+
 *.class
 *.log
+
+### SBT
+
+target/
