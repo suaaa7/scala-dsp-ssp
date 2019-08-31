@@ -15,9 +15,6 @@ import cache.{CCache, GCache}
 import request.DspAdReqBody
 import response.DspAdResBody
 
-import scala.language.postfixOps
-import scala.util.Random
-
 object Api extends App {
   val config = ConfigFactory.load
 
