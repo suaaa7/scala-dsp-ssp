@@ -11,34 +11,63 @@ import io.finch.circe._
 import io.finch.syntax._
 import io.circe.generic.auto._
 import io.circe.parser._
+import cache.{CCache, GCache}
 import request.DspAdReqBody
 import response.DspAdResBody
-
-import scala.language.postfixOps
 
 object Api extends App {
   val config = ConfigFactory.load
 
-  private[this] def createDspAdResBody(
+  private[this] def createDspAdResBodyG(
     dspAdReqBody: DspAdReqBody
-  ): DspAdResBody = {
-    val price: Double = dspAdReqBody.floorPrice * 2
-    println(price)
-
-    DspAdResBody(
-      url="http://example.com",
-      price=price
-    )
+  ): Future[DspAdResBody] = {
+    for {
+      mapFromGCache <- GCache.getMapCache("Guava")
+    } yield {
+      val price = dspAdReqBody.floorPrice * mapFromGCache.getOrElse("A", 0.001)
+      DspAdResBody(
+        url="http://example.com",
+        price=price
+      )
+    }
   }
 
-  val response: Endpoint[DspAdResBody] = post("v1" :: "ad" :: jsonBody[DspAdReqBody]) { 
+  private[this] def createDspAdResBodyC(
+    dspAdReqBody: DspAdReqBody
+  ): Future[DspAdResBody] = {
+    for {
+      mapFromCCache <- CCache.getMapCache("Caffeine")
+    } yield {
+      val price = dspAdReqBody.floorPrice * mapFromCCache.getOrElse("A", 0.001)
+      DspAdResBody(
+        url="http://example.com",
+        price=price
+      )
+    }
+  }
+
+  val responseG: Endpoint[DspAdResBody] = post("v1" :: "ad" :: "g" :: jsonBody[DspAdReqBody]) { 
     (dspAdReqBody: DspAdReqBody) =>
-      Ok(createDspAdResBody(dspAdReqBody))
+      for {
+        dspAdResBody <- createDspAdResBodyG(dspAdReqBody)
+      } yield Ok(dspAdResBody)
   }
+
+  val responseC: Endpoint[DspAdResBody] = post("v1" :: "ad" :: "c" :: jsonBody[DspAdReqBody]) { 
+    (dspAdReqBody: DspAdReqBody) =>
+      for {
+        dspAdResBody <- createDspAdResBodyC(dspAdReqBody)
+      } yield Ok(dspAdResBody)
+  }
+
+  val service = Bootstrap
+    .serve[Application.Json](responseG)
+    .serve[Application.Json](responseC)
+    .toService
 
   val dspPort = config.getString("app.dspPort")
   val server: ListeningServer =
-    Http.server.serve(s":$dspPort", response.toServiceAs[Application.Json])
+    Http.server.serve(s":$dspPort", service)
 
   Await.ready(server)
 }

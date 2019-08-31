@@ -6,6 +6,7 @@ lazy val catsVersion = "1.6.0"
 
 lazy val lib = Seq(
   "com.twitter" %% "finagle-http" % finagleVersion,
+  "com.twitter" %% "util-cache-guava" % "18.12.0",
   "com.github.finagle" %% "finch-circe" % finchVersion,
   "com.github.finagle" %% "finch-core" % finchVersion,
   "io.circe" %% "circe-generic" % circeVersion,
@@ -16,7 +17,7 @@ lazy val lib = Seq(
 
 lazy val root = (project in file("."))
   .settings(
-    name := "ScalaSSP",
+    name := "scaladsp",
     version := "1.0.0",
     scalaVersion := "2.12.8",
     libraryDependencies ++= lib
