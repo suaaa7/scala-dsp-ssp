@@ -10,11 +10,10 @@ import io.finch._
 import io.finch.circe._
 import io.finch.syntax._
 import io.circe.generic.auto._
+import io.circe.syntax._
 import io.circe.parser._
 import request.{SspAdReqBody, DspAdReqBody}
 import response.{SspAdResBody, DspAdResBody}
-
-import scala.language.postfixOps
 
 object Api extends App {
   val config = ConfigFactory.load
@@ -35,15 +34,15 @@ object Api extends App {
   private[this] def request2Dsp(
     host: String,
     port: String,
-    json: String
+    dspAdReqBody: DspAdReqBody
   ): Future[Either[Throwable, Response]] = {
     val requestTimeout = config.getInt("app.requestTimeout")
     val client: Service[Request, Response] = Http.client
       .withRequestTimeout(requestTimeout.milliseconds)
-      .newService(s"""$host:$port""")
+      .newService(s"$host:$port")
 
-    val request = Request(Method.Get, "/").host(host)
-    request.setContentString(json)
+    val request = Request(Method.Post, "/v1/ad/g").host(host)
+    request.setContentString(dspAdReqBody.asJson.noSpaces)
     request.setContentTypeJson()
 
     client(request)
@@ -56,7 +55,7 @@ object Api extends App {
       val dspHost = config.getString("app.dspHost")
       val dspPort = config.getString("app.dspPort")
       val listOfFutures = 
-        List(request2Dsp(dspHost, dspPort, createDspAdReqBody(sspAdReqBody).toString))
+        List(request2Dsp(dspHost, dspPort, createDspAdReqBody(sspAdReqBody)))
       val futureOfList = Future.collect(listOfFutures)
 
       futureOfList.map { listOfEither =>
