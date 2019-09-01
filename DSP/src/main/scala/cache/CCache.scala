@@ -27,6 +27,6 @@ object CCache extends CCache {
 
   private[this] def getMap(key: String): Future[Map[String, Double]] = {
     Thread.sleep(5000)
-    Future(Map("A" -> 0.03, "B" -> 0.04))
+    Future(Map("A" -> 1.1, "B" -> 1.3))
   }
 }

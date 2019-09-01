@@ -16,7 +16,7 @@ lazy val lib = Seq(
 
 lazy val root = (project in file("."))
   .settings(
-    name := "ScalaSSP",
+    name := "scalassp",
     version := "1.0.0",
     scalaVersion := "2.12.8",
     libraryDependencies ++= lib
