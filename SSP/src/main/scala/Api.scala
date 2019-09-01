@@ -2,7 +2,7 @@ import cats.data.OptionT
 import cats.instances.list._
 import cats.syntax.list._
 import com.twitter.conversions.DurationOps._
-import com.twitter.finagle.{Http, ListeningServer, Service}
+import com.twitter.finagle.{Http, Service}
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.util._
 import com.typesafe.config.ConfigFactory
@@ -12,8 +12,10 @@ import io.finch.syntax._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
+import dsp.DSP
 import request.{SspAdReqBody, DspAdReqBody}
 import response.{SspAdResBody, DspAdResBody}
+import scala.collection.JavaConversions._
 
 object Api extends App {
   val config = ConfigFactory.load
@@ -21,7 +23,7 @@ object Api extends App {
   private[this] def createDspAdReqBody(
     sspAdReqBody: SspAdReqBody
   ): DspAdReqBody = {
-    val floorPrice: Double = 1.08
+    val floorPrice: Double = 100.0
 
     DspAdReqBody(
       sspName=config.getString("app.sspName"),
@@ -32,16 +34,15 @@ object Api extends App {
   }
 
   private[this] def request2Dsp(
-    host: String,
-    port: String,
+    dsp: DSP,
     dspAdReqBody: DspAdReqBody
   ): Future[Either[Throwable, Response]] = {
     val requestTimeout = config.getInt("app.requestTimeout")
     val client: Service[Request, Response] = Http.client
       .withRequestTimeout(requestTimeout.milliseconds)
-      .newService(s"$host:$port")
+      .newService(s"${dsp.host}:${dsp.port}")
 
-    val request = Request(Method.Post, "/v1/ad/g").host(host)
+    val request = Request(Method.Post, dsp.path).host(dsp.host)
     request.setContentString(dspAdReqBody.asJson.noSpaces)
     request.setContentTypeJson()
 
@@ -50,34 +51,36 @@ object Api extends App {
       .handle { case t => Left(t) }
   }
 
+  val dspClients: List[DSP] = {
+    val dspHost = config.getString("app.dspHost")
+    val dspPort = config.getString("app.dspPort")
+    config.getStringList("app.dspPaths").toList.map { dspPath =>
+      DSP(dspHost, dspPort, dspPath)
+    }
+  }
+
   val response: Endpoint[SspAdResBody] = post("v1" :: "ad" :: jsonBody[SspAdReqBody]) { 
     (sspAdReqBody: SspAdReqBody) =>
-      val dspHost = config.getString("app.dspHost")
-      val dspPort = config.getString("app.dspPort")
-      val listOfFutures = 
-        List(request2Dsp(dspHost, dspPort, createDspAdReqBody(sspAdReqBody)))
-      val futureOfList = Future.collect(listOfFutures)
+      val dspAdReqBody = createDspAdReqBody(sspAdReqBody)
 
-      futureOfList.map { listOfEither =>
-        val responsesReceivedInTime = listOfEither.flatMap(_.toOption)
-
-        val dspAdResList: List[DspAdResBody] = (for {
-          responseNel <- OptionT.fromOption[List](responsesReceivedInTime.toList.toNel)
-          response <- OptionT.liftF(responseNel.toList)
-          dspAdResBody <- OptionT.fromOption(decode[DspAdResBody](response.contentString).toOption)
-        } yield dspAdResBody).value.flatten
-
-        dspAdResList.toNel.map { dspAdResNel =>
-          Ok(
-            SspAdResBody(dspAdResNel.toList.maxBy(_.price).url)
-          )
-        }.getOrElse(NoContent)
-      }
+      Future
+        .collect(dspClients.map(request2Dsp(_, dspAdReqBody)))
+        .map { listOfEither =>
+          (for {
+            responseNel <- OptionT.fromOption[List](listOfEither.flatMap(_.toOption).toList.toNel)
+            response <- OptionT.liftF(responseNel.toList)
+            dspAdResBody <- OptionT.fromOption(decode[DspAdResBody](response.contentString).toOption)
+          } yield dspAdResBody)
+            .value.flatten.toNel.map { dspAdResNel =>
+              Ok(
+                SspAdResBody(dspAdResNel.toList.maxBy(_.price).url)
+              )
+            }.getOrElse(NoContent)
+        }
   }
 
   val sspPort = config.getString("app.sspPort")
-  val server: ListeningServer =
-    Http.server.serve(s":$sspPort", response.toServiceAs[Application.Json])
+  val server = Http.server.serve(s":$sspPort", response.toServiceAs[Application.Json])
 
   Await.ready(server)
 }
