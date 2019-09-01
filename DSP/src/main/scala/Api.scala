@@ -1,8 +1,4 @@
-import cats.data.OptionT
-import cats.instances.list._
-import cats.syntax.list._
-import com.twitter.conversions.DurationOps._
-import com.twitter.finagle.{Http, ListeningServer, Service}
+import com.twitter.finagle.Http
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.util._
 import com.typesafe.config.ConfigFactory
@@ -10,7 +6,6 @@ import io.finch._
 import io.finch.circe._
 import io.finch.syntax._
 import io.circe.generic.auto._
-import io.circe.parser._
 import cache.{CCache, GCache}
 import request.DspAdReqBody
 import response.DspAdResBody
@@ -24,9 +19,9 @@ object Api extends App {
     for {
       mapFromGCache <- GCache.getMapCache("Guava")
     } yield {
-      val price = dspAdReqBody.floorPrice * mapFromGCache.getOrElse("A", 0.001)
+      val price = dspAdReqBody.floorPrice * mapFromGCache.getOrElse("A", 1.0)
       DspAdResBody(
-        url="http://example.com",
+        url="http://example.com/g",
         price=price
       )
     }
@@ -38,9 +33,9 @@ object Api extends App {
     for {
       mapFromCCache <- CCache.getMapCache("Caffeine")
     } yield {
-      val price = dspAdReqBody.floorPrice * mapFromCCache.getOrElse("A", 0.001)
+      val price = dspAdReqBody.floorPrice * mapFromCCache.getOrElse("A", 1.0)
       DspAdResBody(
-        url="http://example.com",
+        url="http://example.com/c",
         price=price
       )
     }
@@ -66,8 +61,7 @@ object Api extends App {
     .toService
 
   val dspPort = config.getString("app.dspPort")
-  val server: ListeningServer =
-    Http.server.serve(s":$dspPort", service)
+  val server = Http.server.serve(s":$dspPort", service)
 
   Await.ready(server)
 }

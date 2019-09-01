@@ -28,6 +28,6 @@ object GCache extends GCache {
 
   private[this] def getMap(key: String): Future[Map[String, Double]] = {
     Thread.sleep(5000)
-    Future(Map("A" -> 0.01, "B" -> 0.02))
+    Future(Map("A" -> 1.2, "B" -> 1.4))
   }
 }
