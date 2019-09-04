@@ -1,9 +1,4 @@
-package request
-
-case class SspAdReqBody(
-  siteId: Int,
-  adspotId: Int
-)
+package dsp.request
 
 case class DspAdReqBody(
   sspName: String,

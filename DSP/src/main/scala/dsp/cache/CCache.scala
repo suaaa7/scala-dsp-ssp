@@ -1,4 +1,4 @@
-package cache
+package dsp.cache
 
 import com.github.benmanes.caffeine.cache.{Caffeine, LoadingCache}
 import com.twitter.cache.caffeine.CaffeineCache
