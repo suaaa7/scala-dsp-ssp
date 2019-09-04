@@ -1,4 +1,4 @@
-package request
+package dsp.request
 
 case class DspAdReqBody(
   sspName: String,

@@ -1,3 +1,5 @@
+package dsp
+
 import com.twitter.finagle.Http
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.util._
@@ -6,9 +8,9 @@ import io.finch._
 import io.finch.circe._
 import io.finch.syntax._
 import io.circe.generic.auto._
-import cache.{CCache, GCache}
-import request.DspAdReqBody
-import response.DspAdResBody
+import dsp.cache.{CCache, GCache}
+import dsp.request.DspAdReqBody
+import dsp.response.DspAdResBody
 
 object Api extends App {
   val config = ConfigFactory.load

@@ -1,4 +1,4 @@
-package cache
+package dsp.cache
 
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import com.twitter.cache.guava.GuavaCache
