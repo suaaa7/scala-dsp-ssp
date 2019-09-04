@@ -6,17 +6,17 @@ import cats.syntax.list._
 import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.{Http, Service}
 import com.twitter.finagle.http.{Method, Request, Response}
-import com.twitter.util._
+import com.twitter.util.{Await, Future}
 import com.typesafe.config.ConfigFactory
 import io.finch._
 import io.finch.circe._
 import io.finch.syntax._
 import io.circe.generic.auto._
-import io.circe.syntax._
 import io.circe.parser._
+import io.circe.syntax._
 import ssp.dsp.DSP
-import ssp.request.{SspAdReqBody, DspAdReqBody}
-import ssp.response.{SspAdResBody, DspAdResBody}
+import ssp.request.{DspAdReqBody, SspAdReqBody}
+import ssp.response.{DspAdResBody, SspAdResBody}
 import scala.collection.JavaConversions._
 
 object Api extends App {
