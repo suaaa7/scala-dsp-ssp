@@ -1,8 +1,8 @@
 package dsp
 
 import com.twitter.finagle.Http
-import com.twitter.finagle.http.{Method, Request, Response}
-import com.twitter.util._
+import com.twitter.finagle.http.{Request, Response}
+import com.twitter.util.{Await, Future}
 import com.typesafe.config.ConfigFactory
 import io.finch._
 import io.finch.circe._
