@@ -1,3 +1,5 @@
+package ssp
+
 import cats.data.OptionT
 import cats.instances.list._
 import cats.syntax.list._
@@ -12,9 +14,9 @@ import io.finch.syntax._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
-import dsp.DSP
-import request.{SspAdReqBody, DspAdReqBody}
-import response.{SspAdResBody, DspAdResBody}
+import ssp.dsp.DSP
+import ssp.request.{SspAdReqBody, DspAdReqBody}
+import ssp.response.{SspAdResBody, DspAdResBody}
 import scala.collection.JavaConversions._
 
 object Api extends App {

@@ -1,4 +1,4 @@
-package response
+package ssp.response
 
 case class SspAdResBody(url: String)
 

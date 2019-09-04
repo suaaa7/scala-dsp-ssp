@@ -1,4 +1,4 @@
-package request
+package ssp.request
 
 case class SspAdReqBody(
   siteId: Int,
