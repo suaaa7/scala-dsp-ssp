@@ -8,7 +8,7 @@ import io.finch._
 import io.finch.circe._
 import io.finch.syntax._
 import io.circe.generic.auto._
-import dsp.cache.{CCache, GCache}
+import dsp.cache.{Cache, CCache, GCache}
 import dsp.request.DspAdReqBody
 import dsp.response.DspAdResBody
 
@@ -64,6 +64,8 @@ object Api extends App {
 
   val dspPort = config.getString("app.dspPort")
   val server = Http.server.serve(s":$dspPort", service)
+
+  Cache.warmUp()
 
   Await.ready(server)
 }
