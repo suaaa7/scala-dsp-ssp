@@ -14,7 +14,7 @@ import io.finch.syntax._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import ssp.dsp.DSP
+import ssp.dsp.Dsp
 import ssp.request.{DspAdReqBody, SspAdReqBody}
 import ssp.response.{DspAdResBody, SspAdResBody}
 import scala.collection.JavaConversions._
@@ -36,7 +36,7 @@ object Api extends App {
   }
 
   private[this] def request2Dsp(
-    dsp: DSP,
+    dsp: Dsp,
     dspAdReqBody: DspAdReqBody
   ): Future[Either[Throwable, Response]] = {
     val requestTimeout = config.getInt("app.requestTimeout")
@@ -53,11 +53,11 @@ object Api extends App {
       .handle { case t => Left(t) }
   }
 
-  val dspClients: List[DSP] = {
+  val dspClients: List[Dsp] = {
     val dspHost = config.getString("app.dspHost")
     val dspPort = config.getString("app.dspPort")
     config.getStringList("app.dspPaths").toList.map { dspPath =>
-      DSP(dspHost, dspPort, dspPath)
+      Dsp(dspHost, dspPort, dspPath)
     }
   }
 
