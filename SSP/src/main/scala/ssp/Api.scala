@@ -23,21 +23,21 @@ object Api extends App {
   val config = ConfigFactory.load
 
   private[this] def createDspAdReqBody(
-    sspAdReqBody: SspAdReqBody
+      sspAdReqBody: SspAdReqBody
   ): DspAdReqBody = {
     val floorPrice: Double = 100.0
 
     DspAdReqBody(
-      sspName=config.getString("app.sspName"),
-      siteId=sspAdReqBody.siteId,
-      adspotId=sspAdReqBody.adspotId,
-      floorPrice=floorPrice 
+      sspName = config.getString("app.sspName"),
+      siteId = sspAdReqBody.siteId,
+      adspotId = sspAdReqBody.adspotId,
+      floorPrice = floorPrice,
     )
   }
 
   private[this] def request2Dsp(
-    dsp: Dsp,
-    dspAdReqBody: DspAdReqBody
+      dsp: Dsp,
+      dspAdReqBody: DspAdReqBody
   ): Future[Either[Throwable, Response]] = {
     val requestTimeout = config.getInt("app.requestTimeout")
     val client: Service[Request, Response] = Http.client
@@ -61,28 +61,33 @@ object Api extends App {
     }
   }
 
-  val response: Endpoint[SspAdResBody] = post("v1" :: "ad" :: jsonBody[SspAdReqBody]) { 
-    (sspAdReqBody: SspAdReqBody) =>
-      val dspAdReqBody = createDspAdReqBody(sspAdReqBody)
+  val response: Endpoint[SspAdResBody] =
+    post("v1" :: "ad" :: jsonBody[SspAdReqBody]) {
+      (sspAdReqBody: SspAdReqBody) =>
+        val dspAdReqBody = createDspAdReqBody(sspAdReqBody)
 
-      Future
-        .collect(dspClients.map(request2Dsp(_, dspAdReqBody)))
-        .map { listOfEither =>
-          (for {
-            responseNel <- OptionT.fromOption[List](listOfEither.flatMap(_.toOption).toList.toNel)
-            response <- OptionT.liftF(responseNel.toList)
-            dspAdResBody <- OptionT.fromOption(decode[DspAdResBody](response.contentString).toOption)
-          } yield dspAdResBody)
-            .value.flatten.toNel.map { dspAdResNel =>
-              Ok(
-                SspAdResBody(dspAdResNel.toList.maxBy(_.price).url)
-              )
-            }.getOrElse(NoContent)
-        }
-  }
+        Future
+          .collect(dspClients.map(request2Dsp(_, dspAdReqBody)))
+          .map { listOfEither =>
+            (for {
+              responseNel <- OptionT.fromOption[List](
+                listOfEither.flatMap(_.toOption).toList.toNel)
+              response <- OptionT.liftF(responseNel.toList)
+              dspAdResBody <- OptionT.fromOption(
+                decode[DspAdResBody](response.contentString).toOption)
+            } yield dspAdResBody).value.flatten.toNel
+              .map { dspAdResNel =>
+                Ok(
+                  SspAdResBody(dspAdResNel.toList.maxBy(_.price).url)
+                )
+              }
+              .getOrElse(NoContent)
+          }
+    }
 
   val sspPort = config.getString("app.sspPort")
-  val server = Http.server.serve(s":$sspPort", response.toServiceAs[Application.Json])
+  val server =
+    Http.server.serve(s":$sspPort", response.toServiceAs[Application.Json])
 
   Await.ready(server)
 }

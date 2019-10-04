@@ -16,46 +16,48 @@ object Api extends App {
   val config = ConfigFactory.load
 
   private[this] def createDspAdResBodyG(
-    dspAdReqBody: DspAdReqBody
+      dspAdReqBody: DspAdReqBody
   ): Future[DspAdResBody] = {
     for {
       mapFromGCache <- GCache.getMapCache("Guava")
     } yield {
       val price = dspAdReqBody.floorPrice * mapFromGCache.getOrElse("A", 1.0)
       DspAdResBody(
-        url="http://example.com/g",
-        price=price
+        url = "http://example.com/g",
+        price = price
       )
     }
   }
 
   private[this] def createDspAdResBodyC(
-    dspAdReqBody: DspAdReqBody
+      dspAdReqBody: DspAdReqBody
   ): Future[DspAdResBody] = {
     for {
       mapFromCCache <- CCache.getMapCache("Caffeine")
     } yield {
       val price = dspAdReqBody.floorPrice * mapFromCCache.getOrElse("A", 1.0)
       DspAdResBody(
-        url="http://example.com/c",
-        price=price
+        url = "http://example.com/c",
+        price = price
       )
     }
   }
 
-  val responseG: Endpoint[DspAdResBody] = post("v1" :: "ad" :: "g" :: jsonBody[DspAdReqBody]) { 
-    (dspAdReqBody: DspAdReqBody) =>
-      for {
-        dspAdResBody <- createDspAdResBodyG(dspAdReqBody)
-      } yield Ok(dspAdResBody)
-  }
+  val responseG: Endpoint[DspAdResBody] =
+    post("v1" :: "ad" :: "g" :: jsonBody[DspAdReqBody]) {
+      (dspAdReqBody: DspAdReqBody) =>
+        for {
+          dspAdResBody <- createDspAdResBodyG(dspAdReqBody)
+        } yield Ok(dspAdResBody)
+    }
 
-  val responseC: Endpoint[DspAdResBody] = post("v1" :: "ad" :: "c" :: jsonBody[DspAdReqBody]) { 
-    (dspAdReqBody: DspAdReqBody) =>
-      for {
-        dspAdResBody <- createDspAdResBodyC(dspAdReqBody)
-      } yield Ok(dspAdResBody)
-  }
+  val responseC: Endpoint[DspAdResBody] =
+    post("v1" :: "ad" :: "c" :: jsonBody[DspAdReqBody]) {
+      (dspAdReqBody: DspAdReqBody) =>
+        for {
+          dspAdResBody <- createDspAdResBodyC(dspAdReqBody)
+        } yield Ok(dspAdResBody)
+    }
 
   val service = Bootstrap
     .serve[Application.Json](responseG)

@@ -6,7 +6,7 @@ import com.twitter.util.Future
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-trait GCache { 
+trait GCache {
   val getMapCache: String => Future[Map[String, Double]]
 }
 
@@ -22,8 +22,8 @@ object GCache extends GCache {
       })
   }
 
-  val getMapCache: String => Future[Map[String, Double]] = {
-    key => GuavaCache.fromLoadingCache(cache)(key)
+  val getMapCache: String => Future[Map[String, Double]] = { key =>
+    GuavaCache.fromLoadingCache(cache)(key)
   }
 
   private[this] def getMap(key: String): Future[Map[String, Double]] = {

@@ -22,3 +22,7 @@ lazy val root = (project in file("."))
     scalaVersion := "2.12.8",
     libraryDependencies ++= lib
   )
+
+scalafmtVersion in ThisBuild := "1.5.1"
+scalafmtTestOnCompile in ThisBuild := true
+scalafmtShowDiff in (ThisBuild, scalafmt) := true
